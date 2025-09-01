@@ -1,0 +1,79 @@
+# 🚨 **MENSAJE URGENTE PARA EL BACKEND - ERROR PLANTA MASIVO**
+
+## ❌ **PROBLEMA CRÍTICO:**
+El endpoint `POST /api/cuarteles/plantas-masivo` está fallando con error **400** porque el campo `fecha_creacion` no tiene valor por defecto.
+
+## 🔍 **ERROR ESPECÍFICO:**
+```
+ERROR: Field 'fecha_creacion' doesn't have a default value
+```
+
+## 📋 **CAUSA DEL PROBLEMA:**
+El backend está intentando insertar plantas en la tabla `plantas` pero no está proporcionando un valor para el campo `fecha_creacion`.
+
+## 🔧 **SOLUCIÓN REQUERIDA:**
+
+### **✅ CORRECCIÓN PARA PLANTAS MASIVO:**
+```sql
+-- Las plantas SÍ tienen fecha_creacion, usar NOW()
+INSERT INTO plantas (id_hilera, planta, id_estado, fecha_creacion) 
+VALUES (%s, %s, %s, NOW())
+```
+
+### **❌ NO HACER:**
+```sql
+-- NO remover fecha_creacion de plantas
+INSERT INTO plantas (id_hilera, planta, id_estado) 
+VALUES (%s, %s, %s)
+```
+
+## 🎯 **DIFERENCIA ENTRE HILERAS Y PLANTAS:**
+
+### **HILERAS (Catastro masivo):**
+- ✅ **Solo crear hileras** en la tabla `hileras`
+- ❌ **NO incluir** campos de fecha (hileras no tienen fecha_creacion)
+- ✅ **Sin registros** de mapeo
+
+### **PLANTAS (Plantas masivo):**
+- ✅ **Crear plantas** en tabla `plantas`
+- ✅ **SÍ incluir** fecha_creacion con NOW()
+- ✅ **Con estado** por defecto
+
+### **MAPEO (Registros masivo):**
+- ✅ **Crear registros** en tabla de mapeo
+- ✅ **SÍ incluir** campos de fecha
+- ✅ **Con evaluaciones** y datos de campo
+
+## 📊 **DATOS QUE ENVÍA EL FRONTEND:**
+```json
+{
+  "plantas": [
+    {
+      "id_cuartel": 1030200701,
+      "id_hilera": 1030200701001,
+      "n_plantas": 5
+    }
+  ]
+}
+```
+
+## 🚀 **RESULTADO ESPERADO:**
+```json
+{
+  "success": true,
+  "message": "Se crearon plantas para 2 hileras",
+  "data": {
+    "hileras_procesadas": 2,
+    "plantas_creadas": 8,
+    "errores": []
+  }
+}
+```
+
+## ⚠️ **URGENCIA:**
+**El frontend necesita este endpoint funcionando INMEDIATAMENTE para completar el flujo de catastro masivo.**
+
+**¡Por favor, corrijan el campo fecha_creacion lo antes posible!**
+
+---
+**Equipo Frontend** 🎯
