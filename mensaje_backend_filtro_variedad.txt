@@ -1,0 +1,228 @@
+# 📋 **MENSAJE PARA EL BACKEND - FILTRO DE VARIEDAD NO FUNCIONA**
+
+## 🎯 **PROBLEMA IDENTIFICADO**
+
+El filtro de variedad en la vista de **Estimaciones** no está funcionando correctamente. Los cuarteles no se filtran por variedad seleccionada.
+
+## 🔍 **ANÁLISIS DEL PROBLEMA**
+
+### **Frontend actual:**
+- ✅ **Filtro por especie**: Funciona correctamente
+- ❌ **Filtro por variedad**: No filtra los cuarteles
+- ✅ **Búsqueda**: Funciona correctamente
+- ✅ **Solo activos**: Siempre aplicado
+
+### **Código de filtrado:**
+```dart
+// Filtrar por variedad seleccionada
+if (_variedadSeleccionada != null && _variedadSeleccionada!.isNotEmpty) {
+  filtrados = filtrados.where((cuartel) {
+    return cuartel['variedad'] == _variedadSeleccionada;
+  }).toList();
+}
+```
+
+## 📊 **ESTRUCTURA DE DATOS ACTUAL**
+
+### **Endpoint usado:**
+```
+GET /api/cuarteles/sucursal-activa
+```
+
+### **Respuesta actual:**
+```json
+{
+  "success": true,
+  "data": {
+    "especies": [
+      {
+        "nombre": "NECTARIN",
+        "cuarteles": [
+          {
+            "id": 1020200501,
+            "nombre": "ARTIC FIRE B 1 A PC",
+            "variedad": "ARTIC FIRE",  // ✅ Campo existe
+            "especie_nombre": "NECTARIN",
+            "estado": "ACTIVO"
+          },
+          {
+            "id": 1020200502,
+            "nombre": "SUNRISE B 2 A PC", 
+            "variedad": "SUNRISE",     // ✅ Campo existe
+            "especie_nombre": "NECTARIN",
+            "estado": "ACTIVO"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 🔧 **POSIBLES CAUSAS**
+
+### **1. Campo 'variedad' inconsistente:**
+- ¿El campo se llama `variedad` o `nombre_variedad`?
+- ¿Algunos cuarteles tienen `variedad: null`?
+- ¿El valor viene como string o como objeto?
+
+### **2. Datos de variedad faltantes:**
+- ¿Todos los cuarteles tienen variedad asignada?
+- ¿Hay cuarteles con `variedad: ""` o `variedad: "N/A"`?
+
+### **3. Estructura de respuesta diferente:**
+- ¿El campo variedad está en otro nivel del JSON?
+- ¿Necesitamos hacer JOIN con tabla de variedades?
+
+## 🧪 **PRUEBAS SUGERIDAS**
+
+### **1. Verificar estructura de datos:**
+```sql
+SELECT 
+    c.id,
+    c.nombre,
+    c.variedad,
+    v.nombre as nombre_variedad,
+    e.nombre as especie_nombre
+FROM cuarteles c
+LEFT JOIN variedades v ON c.id_variedad = v.id
+LEFT JOIN especies e ON c.id_especie = e.id
+WHERE c.activo = 1
+LIMIT 10;
+```
+
+### **2. Verificar valores únicos de variedad:**
+```sql
+SELECT DISTINCT variedad, COUNT(*) as cantidad
+FROM cuarteles 
+WHERE activo = 1
+GROUP BY variedad
+ORDER BY variedad;
+```
+
+### **3. Verificar cuarteles sin variedad:**
+```sql
+SELECT COUNT(*) as sin_variedad
+FROM cuarteles 
+WHERE activo = 1 
+AND (variedad IS NULL OR variedad = '' OR variedad = 'N/A');
+```
+
+## ✅ **SOLUCIONES PROPUESTAS**
+
+### **Opción 1: Verificar campo correcto**
+Si el campo se llama diferente:
+```json
+{
+  "variedad": "ARTIC FIRE",           // Campo actual
+  "nombre_variedad": "ARTIC FIRE",    // Campo alternativo
+  "id_variedad": 1,                   // ID de variedad
+  "variedad_nombre": "ARTIC FIRE"     // Otro posible nombre
+}
+```
+
+### **Opción 2: Incluir información completa de variedad**
+```json
+{
+  "cuarteles": [
+    {
+      "id": 1020200501,
+      "nombre": "ARTIC FIRE B 1 A PC",
+      "variedad": {
+        "id": 1,
+        "nombre": "ARTIC FIRE",
+        "descripcion": "Variedad de nectarina"
+      },
+      "especie_nombre": "NECTARIN"
+    }
+  ]
+}
+```
+
+### **Opción 3: Endpoint específico para variedades**
+```
+GET /api/cuarteles/variedades-disponibles
+```
+**Respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "variedades": [
+      {
+        "id": 1,
+        "nombre": "ARTIC FIRE",
+        "cantidad_cuarteles": 15
+      },
+      {
+        "id": 2, 
+        "nombre": "SUNRISE",
+        "cantidad_cuarteles": 8
+      }
+    ]
+  }
+}
+```
+
+## 🔍 **DEBUGGING FRONTEND**
+
+### **Para verificar datos:**
+```dart
+// Agregar debug en el filtrado
+print('DEBUG: Filtrando por variedad: $_variedadSeleccionada');
+print('DEBUG: Cuarteles antes del filtro: ${filtrados.length}');
+print('DEBUG: Primer cuartel: ${filtrados.first}');
+
+// Después del filtro
+print('DEBUG: Cuarteles después del filtro: ${filtrados.length}');
+```
+
+### **Para verificar campo variedad:**
+```dart
+// Verificar estructura de un cuartel
+final cuartel = filtrados.first;
+print('DEBUG: Campos del cuartel: ${cuartel.keys}');
+print('DEBUG: Valor variedad: ${cuartel['variedad']}');
+print('DEBUG: Tipo de variedad: ${cuartel['variedad'].runtimeType}');
+```
+
+## 📞 **ACCIÓN REQUERIDA**
+
+### **Para el Backend:**
+1. **Verificar** que el campo `variedad` existe y tiene datos válidos
+2. **Confirmar** el nombre exacto del campo (variedad, nombre_variedad, etc.)
+3. **Probar** el endpoint con datos reales
+4. **Enviar** ejemplo de respuesta con variedades diferentes
+
+### **Para el Frontend:**
+1. **Agregar** debug para verificar datos
+2. **Verificar** que el filtro se ejecuta
+3. **Confirmar** que los datos llegan correctamente
+
+## 🎯 **RESULTADO ESPERADO**
+
+### **Con filtro de variedad funcionando:**
+- **Seleccionar "ARTIC FIRE"** → Solo mostrar cuarteles de esa variedad
+- **Seleccionar "SUNRISE"** → Solo mostrar cuarteles de esa variedad  
+- **Seleccionar "Todas"** → Mostrar todos los cuarteles
+
+### **Ejemplo de funcionamiento:**
+```
+┌─────────────────────────────────────┐
+│ 🔍 Buscar cuarteles...              │
+│ [Especie: NECTARIN] [Variedad: ARTIC FIRE] [Limpiar] │
+├─────────────────────────────────────┤
+│ 📍 Cuarteles (15 disponibles)      │
+│ • ARTIC FIRE B 1 A PC               │
+│ • ARTIC FIRE B 2 A PC               │
+│ • ARTIC FIRE B 3 A PC               │
+└─────────────────────────────────────┘
+```
+
+---
+
+**📅 Fecha**: 25 de Enero 2025  
+**🔧 Prioridad**: Media  
+**📋 Estado**: Pendiente de investigación backend
+
+**¡Necesitamos confirmar la estructura exacta de los datos de variedad!** 🔍

@@ -6,6 +6,8 @@ import '../theme/app_theme.dart';
 import '../screens/parametros_screen.dart';
 import '../screens/cambiar_clave_screen.dart';
 import '../screens/cambiar_sucursal_screen.dart';
+import '../screens/looker_test_screen.dart';
+import '../services/navigation_service.dart';
 
 class PersistentSidebar extends StatelessWidget {
   final Widget child;
@@ -145,6 +147,12 @@ class PersistentSidebar extends StatelessWidget {
         'isActive': currentRoute == '/parametros',
       },
       {
+        'icon': Icons.analytics,
+        'title': 'Looker Test',
+        'route': '/looker-test',
+        'isActive': currentRoute == '/looker-test',
+      },
+      {
         'icon': Icons.lock,
         'title': 'Cambiar Clave',
         'route': '/cambiar-clave',
@@ -225,27 +233,42 @@ class PersistentSidebar extends StatelessWidget {
 
   void _handleMenuTap(BuildContext context, Map<String, dynamic> item) {
     final route = item['route'] as String;
+    final title = item['title'] as String;
     
     switch (route) {
       case '/':
         Navigator.pushReplacementNamed(context, '/');
         break;
       case '/parametros':
-        Navigator.push(
+        NavigationHelper.navigateToScreen(
           context,
-          MaterialPageRoute(builder: (_) => const ParametrosScreen()),
+          const ParametrosScreen(),
+          '/parametros',
+          'Configuración General',
+        );
+        break;
+      case '/looker-test':
+        NavigationHelper.navigateToScreen(
+          context,
+          const LookerTestScreen(),
+          '/looker-test',
+          'Looker Test',
         );
         break;
       case '/cambiar-clave':
-        Navigator.push(
+        NavigationHelper.navigateToScreen(
           context,
-          MaterialPageRoute(builder: (_) => const CambiarClaveScreen()),
+          const CambiarClaveScreen(),
+          '/cambiar-clave',
+          'Cambiar Clave',
         );
         break;
       case '/cambiar-sucursal':
-        Navigator.push(
+        NavigationHelper.navigateToScreen(
           context,
-          MaterialPageRoute(builder: (_) => const CambiarSucursalScreen()),
+          const CambiarSucursalScreen(),
+          '/cambiar-sucursal',
+          'Cambiar Sucursal',
         );
         break;
       case '/logout':

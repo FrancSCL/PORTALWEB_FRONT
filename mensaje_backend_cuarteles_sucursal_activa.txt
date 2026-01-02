@@ -1,0 +1,258 @@
+# 🏢 MENSAJE PARA EL BACKEND - CUARTELES POR SUCURSAL ACTIVA
+
+## 🎯 **SOLICITUD DE ENDPOINT**
+
+Hola equipo Backend,
+
+Necesitamos un endpoint específico para obtener **solo los cuarteles de la sucursal activa del usuario** en el flujo de creación de pautas.
+
+---
+
+## 📋 **ENDPOINT REQUERIDO:**
+
+### **GET /api/cuarteles/sucursal-activa**
+```http
+GET /api/cuarteles/sucursal-activa
+Authorization: Bearer {token}
+```
+
+**Descripción:** Obtiene únicamente los cuarteles que pertenecen a la sucursal activa del usuario autenticado.
+
+---
+
+## 🔧 **IMPLEMENTACIÓN ESPERADA:**
+
+### **Lógica del Endpoint:**
+1. **Obtener usuario autenticado** del token JWT
+2. **Obtener sucursal activa** del usuario (`id_sucursalactiva`)
+3. **Filtrar cuarteles** que pertenezcan a esa sucursal
+4. **Retornar lista filtrada** de cuarteles
+
+### **Respuesta Esperada:**
+```json
+{
+  "success": true,
+  "message": "Cuarteles de la sucursal activa obtenidos exitosamente",
+  "data": {
+    "cuarteles": [
+      {
+        "id": 1020200501,
+        "nombre": "Cuartel Norte",
+        "id_sucursal": 103,
+        "sucursal_nombre": "SANTA VICTORIA",
+        "ubicacion": "Sector A",
+        "area_hectareas": 15.5,
+        "estado": "Activo"
+      },
+      {
+        "id": 1020200502,
+        "nombre": "Cuartel Sur",
+        "id_sucursal": 103,
+        "sucursal_nombre": "SANTA VICTORIA",
+        "ubicacion": "Sector B",
+        "area_hectareas": 12.3,
+        "estado": "Activo"
+      }
+    ],
+    "total": 2,
+    "sucursal_info": {
+      "id_sucursal": 103,
+      "nombre_sucursal": "SANTA VICTORIA"
+    }
+  }
+}
+```
+
+---
+
+## 🎯 **CASOS DE USO:**
+
+### **✅ Caso 1: Usuario con una sucursal activa**
+- Usuario tiene `id_sucursalactiva = 103`
+- Endpoint retorna solo cuarteles de sucursal 103
+- Lista filtrada y específica
+
+### **✅ Caso 2: Usuario sin cuarteles asignados**
+- Usuario tiene sucursal activa pero sin cuarteles
+- Endpoint retorna lista vacía
+- Mensaje informativo
+
+### **✅ Caso 3: Usuario con múltiples sucursales**
+- Usuario puede cambiar sucursal activa
+- Endpoint siempre retorna cuarteles de la sucursal actual
+- Filtrado dinámico
+
+---
+
+## 🔒 **VALIDACIONES DE SEGURIDAD:**
+
+### **✅ Validaciones requeridas:**
+- **Token JWT válido** y no expirado
+- **Usuario autenticado** y activo
+- **Sucursal activa válida** del usuario
+- **Permisos de acceso** a los cuarteles
+
+### **❌ Casos de error:**
+- **Sin token:** 401 Unauthorized
+- **Token inválido:** 401 Unauthorized
+- **Usuario inactivo:** 403 Forbidden
+- **Sin sucursal activa:** 400 Bad Request
+
+---
+
+## 📊 **QUERY SQL SUGERIDA:**
+
+```sql
+SELECT 
+    c.id,
+    c.nombre,
+    c.id_sucursal,
+    s.nombre as sucursal_nombre,
+    c.ubicacion,
+    c.area_hectareas,
+    c.estado
+FROM cuarteles c
+INNER JOIN sucursales s ON c.id_sucursal = s.id
+INNER JOIN usuarios u ON u.id_sucursalactiva = s.id
+WHERE u.id = ? -- ID del usuario autenticado
+  AND c.estado = 'Activo'
+ORDER BY c.nombre;
+```
+
+---
+
+## 🚀 **INTEGRACIÓN EN FRONTEND:**
+
+### **Flujo Actual:**
+1. Usuario selecciona "Nueva Pauta"
+2. Sistema carga **TODOS** los cuarteles disponibles
+3. Usuario ve cuarteles de otras sucursales (confuso)
+
+### **Flujo Mejorado:**
+1. Usuario selecciona "Nueva Pauta"
+2. Sistema carga **SOLO** cuarteles de su sucursal activa
+3. Usuario ve solo cuarteles relevantes (claro)
+
+---
+
+## 🎯 **BENEFICIOS:**
+
+### **✅ Para el Usuario:**
+- **Lista más relevante** de cuarteles
+- **Menos confusión** al seleccionar
+- **Experiencia más limpia** y enfocada
+- **Filtrado automático** por contexto
+
+### **✅ Para el Sistema:**
+- **Mejor rendimiento** (menos datos)
+- **Mayor seguridad** (solo datos permitidos)
+- **Consistencia** con otros módulos
+- **Escalabilidad** mejorada
+
+---
+
+## 📝 **IMPLEMENTACIÓN EN BACKEND:**
+
+### **Paso 1: Crear endpoint**
+```python
+@app.route('/api/cuarteles/sucursal-activa', methods=['GET'])
+@jwt_required()
+def get_cuarteles_sucursal_activa():
+    try:
+        # Obtener usuario del token
+        current_user = get_jwt_identity()
+        user = get_user_by_id(current_user)
+        
+        if not user:
+            return jsonify({'error': 'Usuario no encontrado'}), 404
+        
+        # Obtener sucursal activa
+        sucursal_activa = user.get('id_sucursalactiva')
+        if not sucursal_activa:
+            return jsonify({'error': 'Usuario sin sucursal activa'}), 400
+        
+        # Obtener cuarteles de la sucursal activa
+        cuarteles = get_cuarteles_by_sucursal(sucursal_activa)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Cuarteles de la sucursal activa obtenidos exitosamente',
+            'data': {
+                'cuarteles': cuarteles,
+                'total': len(cuarteles),
+                'sucursal_info': {
+                    'id_sucursal': sucursal_activa,
+                    'nombre_sucursal': user.get('sucursal_nombre')
+                }
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+```
+
+### **Paso 2: Función helper**
+```python
+def get_cuarteles_by_sucursal(sucursal_id):
+    query = """
+    SELECT 
+        c.id,
+        c.nombre,
+        c.id_sucursal,
+        s.nombre as sucursal_nombre,
+        c.ubicacion,
+        c.area_hectareas,
+        c.estado
+    FROM cuarteles c
+    INNER JOIN sucursales s ON c.id_sucursal = s.id
+    WHERE c.id_sucursal = %s
+      AND c.estado = 'Activo'
+    ORDER BY c.nombre
+    """
+    
+    cursor.execute(query, (sucursal_id,))
+    results = cursor.fetchall()
+    
+    return [
+        {
+            'id': row[0],
+            'nombre': row[1],
+            'id_sucursal': row[2],
+            'sucursal_nombre': row[3],
+            'ubicacion': row[4],
+            'area_hectareas': row[5],
+            'estado': row[6]
+        }
+        for row in results
+    ]
+```
+
+---
+
+## 🎯 **ESTADO ACTUAL:**
+
+### **❌ Problema Actual:**
+- Frontend usa `/api/cuarteles/` (todos los cuarteles)
+- Usuario ve cuarteles de otras sucursales
+- Experiencia confusa y poco enfocada
+
+### **✅ Solución Propuesta:**
+- Frontend usará `/api/cuarteles/sucursal-activa`
+- Usuario verá solo cuarteles relevantes
+- Experiencia clara y enfocada
+
+---
+
+## 📞 **SOPORTE:**
+
+**Si tienen alguna pregunta sobre este endpoint, estamos disponibles para ayudar.**
+
+**¡Este endpoint mejorará significativamente la experiencia del usuario!** 🚀
+
+---
+
+**Equipo Frontend** 🎨
+
+**📅 Fecha**: 25 de Agosto 2025  
+**🔧 Versión**: 1.0.0  
+**📋 Estado**: ⏳ PENDIENTE DE IMPLEMENTACIÓN

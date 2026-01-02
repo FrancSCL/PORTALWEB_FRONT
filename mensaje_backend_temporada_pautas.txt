@@ -1,0 +1,142 @@
+# 📋 **SOLICITUD BACKEND - INCLUIR TEMPORADA EN PAUTAS**
+
+## 🎯 **PROBLEMA IDENTIFICADO**
+
+En la vista de **Estimaciones > Pautas**, necesitamos mostrar la **temporada** de cada pauta, pero el endpoint actual no está enviando esta información.
+
+## 📊 **ENDPOINT ACTUAL**
+
+```
+GET /api/estimaciones/cuartel/{cuartel_id}/pautas
+```
+
+## 🔍 **RESPUESTA ACTUAL**
+
+```json
+{
+  "success": true,
+  "data": {
+    "pautas": [
+      {
+        "id": "uuid-pauta-1",
+        "labor": "PODA",
+        "fecha_inicio": "2025-08-25",
+        "estado": "activo"
+        // ❌ FALTA: información de temporada
+      },
+      {
+        "id": "uuid-pauta-2", 
+        "labor": "RALEO",
+        "fecha_inicio": "2024-11-04",
+        "estado": "completado"
+        // ❌ FALTA: información de temporada
+      }
+    ]
+  }
+}
+```
+
+## ✅ **RESPUESTA ESPERADA**
+
+```json
+{
+  "success": true,
+  "data": {
+    "pautas": [
+      {
+        "id": "uuid-pauta-1",
+        "labor": "PODA",
+        "fecha_inicio": "2025-08-25",
+        "estado": "activo",
+        "temporada": 1,                    // ✅ AGREGAR
+        "id_temporada": 1,                 // ✅ AGREGAR
+        "nombre_temporada": "2024-2025"    // ✅ AGREGAR (opcional)
+      },
+      {
+        "id": "uuid-pauta-2",
+        "labor": "RALEO", 
+        "fecha_inicio": "2024-11-04",
+        "estado": "completado",
+        "temporada": 1,                    // ✅ AGREGAR
+        "id_temporada": 1,                 // ✅ AGREGAR
+        "nombre_temporada": "2024-2025"    // ✅ AGREGAR (opcional)
+      }
+    ]
+  }
+}
+```
+
+## 🔧 **CAMPOS REQUERIDOS**
+
+### **✅ Mínimo necesario:**
+- `temporada` (INT) - Número de temporada
+- `id_temporada` (INT) - ID de la temporada
+
+### **⚪ Opcional (recomendado):**
+- `nombre_temporada` (STRING) - Nombre descriptivo de la temporada (ej: "2024-2025")
+
+## 📝 **CONSULTA SQL SUGERIDA**
+
+```sql
+SELECT 
+    p.id,
+    p.fecha_inicio,
+    p.estado,
+    l.nombre as labor,
+    t.id as temporada,
+    t.id as id_temporada,
+    t.nombre as nombre_temporada
+FROM conteo_fact_pauta p
+JOIN conteo_dim_laborconteo l ON p.id_conteotipo = l.id
+JOIN temporada_dim_temporada t ON p.id_temporada = t.id
+WHERE p.id_cuartel = ?
+ORDER BY p.fecha_inicio DESC
+```
+
+## 🎯 **CASOS DE USO**
+
+### **Caso 1: Temporada numérica**
+```json
+{
+  "temporada": 1,
+  "id_temporada": 1
+}
+```
+**Frontend mostrará:** `T1`
+
+### **Caso 2: Temporada con nombre**
+```json
+{
+  "temporada": 1,
+  "id_temporada": 1,
+  "nombre_temporada": "2024-2025"
+}
+```
+**Frontend mostrará:** `T1 (2024-2025)` o solo `T1`
+
+## 🚀 **IMPLEMENTACIÓN FRONTEND**
+
+Una vez que el backend incluya la temporada, el frontend mostrará:
+
+```
+┌─────────────────────────────────────┐
+│ ✂️  PODA                    📅 T1   │
+│     📅 25/8/2025              →     │
+├─────────────────────────────────────┤
+│ ➖  RALEO                   📅 T1   │
+│     📅 4/11/2024             →     │
+└─────────────────────────────────────┘
+```
+
+## 📞 **ACCIÓN REQUERIDA**
+
+1. **Modificar endpoint** `/api/estimaciones/cuartel/{cuartel_id}/pautas`
+2. **Incluir campos** `temporada` e `id_temporada` en la respuesta
+3. **Probar con datos reales** para verificar que funciona
+4. **Notificar al frontend** cuando esté listo
+
+---
+
+**📅 Fecha**: 25 de Enero 2025  
+**🔧 Prioridad**: Media  
+**📋 Estado**: Pendiente de implementación backend

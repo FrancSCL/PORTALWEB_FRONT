@@ -1,0 +1,390 @@
+## 📋 **SOLICITUD DE ENDPOINTS PARA VISTA DETALLADA DE CUARTELES**
+
+Hola equipo Backend,
+
+Necesito implementar una vista detallada de cuarteles similar a la que tenemos en AppSheet. Cuando el usuario haga clic en un cuartel específico, necesito mostrar información detallada en múltiples tablas asociadas.
+
+---
+
+## 🎯 **FUNCIONALIDAD REQUERIDA:**
+
+**Vista Actual**: Lista simple de cuarteles por especie
+**Vista Deseada**: Lista de cuarteles + Panel detallado con múltiples tablas asociadas
+
+### **📱 Diseño Propuesto:**
+```
+┌─────────────────────────────────────────────────────────┐
+│ Lista Cuarteles (Izq)    │ Detalles Cuartel (Der)      │
+│ ┌─────────────────────┐   │ ┌─────────────────────────┐ │
+│ │ CEREZA              │   │ │ SPRING FLAME 26 B2 EB SM│ │
+│ │ ┌─────────────────┐ │   │ └─────────────────────────┘ │
+│ │ │ LAP IC 24 CH    │ │   │ ┌─────────────────────────┐ │
+│ │ │ LAPINS B 1 D SM │ │   │ │ Información General     │ │
+│ │ │ SPRING FLAME... │ │   │ └─────────────────────────┘ │
+│ │ └─────────────────┘ │   │ ┌─────────────────────────┐ │
+│ └─────────────────────┘   │ │ Estimaciones (2)        │ │
+│                           │ └─────────────────────────┘ │
+│                           │ ┌─────────────────────────┐ │
+│                           │ │ Rendimiento Packing (2) │ │
+│                           │ └─────────────────────────┘ │
+│                           │ ┌─────────────────────────┐ │
+│                           │ │ Pautas (3)              │ │
+│                           │ └─────────────────────────┘ │
+│                           │ ┌─────────────────────────┐ │
+│                           │ │ Mapeos (3)              │ │
+│                           │ └─────────────────────────┘ │
+│                           │ ┌─────────────────────────┐ │
+│                           │ │ Calibres Históricos (7) │ │
+│                           │ └─────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔗 **ENDPOINTS NECESARIOS:**
+
+### **1. Información General del Cuartel**
+```http
+GET /api/estimaciones/cuartel/{cuartel_id}/informacion-general
+Authorization: Bearer {token}
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "data": {
+    "cuartel": {
+      "id": 1020200501,
+      "nombre": "SPRING FLAME 26 B2 EB SM",
+      "variedad": "SPRING FLAME 26",
+      "superficie_productiva": 2.48,
+      "año_plantacion": 2017,
+      "plantas_ha_teoricas": 1923,
+      "portainjerto": 6,
+      "estado_productivo": "Productivo",
+      "numero_brazos_ejes": 1,
+      "nombre_ceco": "CECO-001",
+      "nombre_sucursal": "SAN MANUEL"
+    }
+  }
+}
+```
+
+### **2. Estimaciones del Cuartel**
+```http
+GET /api/estimaciones/cuartel/{cuartel_id}/estimaciones
+Authorization: Bearer {token}
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "data": {
+    "estimaciones": [
+      {
+        "id": "EST001",
+        "tipo_estimacion": "PRESUPUESTO",
+        "estimacion_cajas_ha": 4000,
+        "estimacion": 0,
+        "fecha": "2025-01-15",
+        "usuario": "Francisco"
+      },
+      {
+        "id": "EST002",
+        "tipo_estimacion": "PRESUPUESTO",
+        "estimacion_cajas_ha": 4500,
+        "estimacion": 4500,
+        "fecha": "2025-01-20",
+        "usuario": "Francisco"
+      }
+    ],
+    "total": 2
+  }
+}
+```
+
+### **3. Rendimiento Packing del Cuartel**
+```http
+GET /api/estimaciones/cuartel/{cuartel_id}/rendimiento-packing
+Authorization: Bearer {token}
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "data": {
+    "rendimientos": [
+      {
+        "id": "REN001",
+        "rendimiento": 87.00,
+        "fecha": "2023-12-21",
+        "usuario": "Francisco"
+      },
+      {
+        "id": "REN002",
+        "rendimiento": 85.00,
+        "fecha": "2025-06-17",
+        "usuario": "Francisco"
+      }
+    ],
+    "total": 2
+  }
+}
+```
+
+### **4. Frutos/Ramilla Histórico**
+```http
+GET /api/estimaciones/cuartel/{cuartel_id}/frutos-ramilla-historico
+Authorization: Bearer {token}
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "data": {
+    "frutos_ramilla": [
+      {
+        "id": "FRU001",
+        "frutos_ramilla": 3.50,
+        "fecha": "2025-01-15",
+        "usuario": "Francisco"
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+### **5. Pautas del Cuartel**
+```http
+GET /api/estimaciones/cuartel/{cuartel_id}/pautas
+Authorization: Bearer {token}
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "data": {
+    "pautas": [
+      {
+        "id": "PAU001",
+        "fecha_inicio": "2025-05-27",
+        "labor": "PODA",
+        "estado": "Completada",
+        "usuario": "Francisco"
+      },
+      {
+        "id": "PAU002",
+        "fecha_inicio": "2024-11-04",
+        "labor": "RALEO",
+        "estado": "Completada",
+        "usuario": "Francisco"
+      },
+      {
+        "id": "PAU003",
+        "fecha_inicio": "2024-05-01",
+        "labor": "PODA",
+        "estado": "Completada",
+        "usuario": "Francisco"
+      }
+    ],
+    "total": 3
+  }
+}
+```
+
+### **6. Mapeos del Cuartel**
+```http
+GET /api/estimaciones/cuartel/{cuartel_id}/mapeos
+Authorization: Bearer {token}
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "data": {
+    "mapeos": [
+      {
+        "id": "MAP001",
+        "fecha": "2024-05-22",
+        "plantas_7": 3895,
+        "plantas_5": 506,
+        "plantas_3": 133,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "MAP002",
+        "fecha": "2023-12-01",
+        "plantas_7": 3526,
+        "plantas_5": 875,
+        "plantas_3": 141,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "MAP003",
+        "fecha": "2025-05-26",
+        "plantas_7": 3306,
+        "plantas_5": 1045,
+        "plantas_3": 194,
+        "usuario": "Francisco"
+      }
+    ],
+    "total": 3
+  }
+}
+```
+
+### **7. Calibres Históricos del Cuartel**
+```http
+GET /api/estimaciones/cuartel/{cuartel_id}/calibres-historicos
+Authorization: Bearer {token}
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "data": {
+    "calibres": [
+      {
+        "id": "CAL001",
+        "fecha": "2024-05-22",
+        "calibre": "80+",
+        "cantidad": 1500,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "CAL002",
+        "fecha": "2024-05-22",
+        "calibre": "70-79",
+        "cantidad": 2000,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "CAL003",
+        "fecha": "2024-05-22",
+        "calibre": "60-69",
+        "cantidad": 1800,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "CAL004",
+        "fecha": "2024-05-22",
+        "calibre": "50-59",
+        "cantidad": 1200,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "CAL005",
+        "fecha": "2024-05-22",
+        "calibre": "40-49",
+        "cantidad": 800,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "CAL006",
+        "fecha": "2024-05-22",
+        "calibre": "30-39",
+        "cantidad": 400,
+        "usuario": "Francisco"
+      },
+      {
+        "id": "CAL007",
+        "fecha": "2024-05-22",
+        "calibre": "<30",
+        "cantidad": 200,
+        "usuario": "Francisco"
+      }
+    ],
+    "total": 7
+  }
+}
+```
+
+---
+
+## 🗄️ **TABLAS INVOLUCRADAS (Basado en el esquema):**
+
+### **Información General:**
+- `general_dim_cuartel` - Datos básicos del cuartel
+- `general_dim_variedad` - Información de variedad
+- `general_dim_especie` - Información de especie
+
+### **Estimaciones:**
+- `estimacion_fact_registroadministradores` - Registros de estimaciones
+- `estimacion_dim_tipo` - Tipos de estimación
+
+### **Rendimiento Packing:**
+- `estimacion_fact_rendimientocuartel` - Rendimientos por cuartel
+
+### **Frutos/Ramilla:**
+- `produccion_fact_pesoracimohistorico` - Peso histórico de racimos
+
+### **Pautas:**
+- `conteo_fact_pauta` - Pautas principales
+- `conteo_dim_laborconteo` - Tipos de labor
+
+### **Mapeos:**
+- `mapeo_fact_registromapeo` - Registros de mapeo
+- `mapeo_fact_registro` - Detalles de mapeo
+
+### **Calibres:**
+- `produccion_dim_calibretipo` - Tipos de calibre
+- `produccion_dim_calibrevalor` - Valores de calibre
+
+---
+
+## 🔧 **CONSIDERACIONES TÉCNICAS:**
+
+### **Filtrado por Usuario:**
+- Todos los endpoints deben filtrar por la sucursal activa del usuario
+- Solo mostrar datos del usuario autenticado o de su sucursal
+
+### **Paginación:**
+- Implementar paginación para tablas con muchos registros
+- Límite sugerido: 50 registros por página
+
+### **Ordenamiento:**
+- Estimaciones: Por fecha descendente
+- Rendimientos: Por fecha descendente
+- Pautas: Por fecha de inicio descendente
+- Mapeos: Por fecha descendente
+- Calibres: Por fecha descendente
+
+### **Validaciones:**
+- Verificar que el cuartel pertenezca a la sucursal del usuario
+- Manejar casos donde no hay datos disponibles
+- Retornar arrays vacíos en lugar de errores cuando no hay datos
+
+---
+
+## 📱 **IMPLEMENTACIÓN EN FRONTEND:**
+
+Una vez implementados los endpoints, el frontend:
+
+1. **Cargará la lista de cuarteles** (ya implementado)
+2. **Al hacer clic en un cuartel**, hará llamadas paralelas a los 7 endpoints
+3. **Mostrará la información** en tarjetas organizadas
+4. **Implementará botones** "EXPANDIR" y "NUEVO" para cada sección
+
+---
+
+## 🎯 **PRIORIDAD DE IMPLEMENTACIÓN:**
+
+1. **Alta Prioridad**: Información General, Estimaciones, Pautas
+2. **Media Prioridad**: Rendimiento Packing, Mapeos
+3. **Baja Prioridad**: Frutos/Ramilla, Calibres Históricos
+
+---
+
+**📅 Fecha**: 25 de Agosto 2025  
+**🔧 Versión**: 1.0.0  
+**📋 Estado**: 📋 SOLICITUD DE ENDPOINTS  
+
+**¡Gracias por implementar estos endpoints para la vista detallada de cuarteles!** 🚀

@@ -1,0 +1,162 @@
+# 🔍 **PREGUNTA PARA EL BACKEND - ENDPOINT CUARTEL-ESPECIE**
+
+---
+
+## 📋 **CONTEXTO**
+
+Hola equipo Backend,
+
+Estamos implementando el nuevo flujo de creación de pautas que especificaste en tu mensaje anterior. El flujo funciona así:
+
+**Cuartel → Variedad → Especie → Labores → Formulario Dinámico**
+
+---
+
+## ❌ **PROBLEMA ENCONTRADO**
+
+El endpoint **`GET /api/pautas/cuartel-especie/{cuartel_id}`** está fallando con error:
+
+```
+ClientException: Failed to fetch, uri=https://api-portalweb-927498545444.us-central1.run.app/api/pautas/cuartel-especie/1020200501
+```
+
+---
+
+## 🔍 **DETALLES DEL ERROR**
+
+### **Request que está fallando:**
+```http
+GET /api/pautas/cuartel-especie/1020200501
+Authorization: Bearer {token}
+```
+
+### **Error específico:**
+- **Tipo**: `ClientException: Failed to fetch`
+- **Cuartel ID**: `1020200501`
+- **Status**: Request falla antes de llegar al servidor
+
+---
+
+## 📊 **ENDPOINT ESPERADO (según tu especificación)**
+
+### **Endpoint:**
+```http
+GET /api/pautas/cuartel-especie/{cuartel_id}
+Authorization: Bearer {token}
+```
+
+### **Respuesta esperada:**
+```json
+{
+  "success": true,
+  "message": "Especie del cuartel obtenida exitosamente",
+  "data": {
+    "id_cuartel": 1,
+    "nombre_cuartel": "Cuartel Norte",
+    "id_variedad": 1,
+    "nombre_variedad": "NECTARIN ROJO",
+    "id_especie": 1,
+    "nombre_especie": "NECTARIN",
+    "caja_equivalente": 18.0
+  }
+}
+```
+
+---
+
+## 🤔 **PREGUNTAS PARA EL BACKEND**
+
+### **1. ¿El endpoint está implementado?**
+- ¿Ya tienes el endpoint `/api/pautas/cuartel-especie/{cuartel_id}` funcionando?
+- ¿Está disponible en el servidor `https://api-portalweb-927498545444.us-central1.run.app`?
+
+### **2. ¿Hay algún problema con el cuartel ID?**
+- El cuartel ID `1020200501` ¿existe en la base de datos?
+- ¿Es un ID válido para este endpoint?
+
+### **3. ¿El endpoint tiene algún nombre diferente?**
+- ¿Podría ser `/api/cuarteles/{cuartel_id}/especie`?
+- ¿O algún otro path?
+
+### **4. ¿Hay algún middleware o configuración especial?**
+- ¿Requiere algún header adicional?
+- ¿Hay alguna configuración de CORS específica?
+
+---
+
+## 🔧 **ESTADO ACTUAL DEL FRONTEND**
+
+### **✅ Lo que funciona:**
+- Carga de cuarteles: `GET /api/cuarteles` ✅
+- Autenticación con Bearer token ✅
+- Navegación entre pasos ✅
+
+### **❌ Lo que falla:**
+- Obtener especie por cuartel: `GET /api/pautas/cuartel-especie/{cuartel_id}` ❌
+
+---
+
+## 📝 **CÓDIGO FRONTEND ACTUAL**
+
+```dart
+Future<void> _obtenerEspeciePorCuartel(int cuartelId) async {
+  try {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/pautas/cuartel-especie/$cuartelId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    // ... resto del código
+  } catch (e) {
+    setState(() {
+      _errorMessage = 'Error al obtener especie del cuartel: $e';
+    });
+  }
+}
+```
+
+---
+
+## 🎯 **FLUJO COMPLETO ESPERADO**
+
+### **Paso 1: Seleccionar Cuartel** ✅
+- Usuario selecciona cuartel de la lista
+- Sistema llama a `/api/pautas/cuartel-especie/{cuartel_id}` ❌
+
+### **Paso 2: Seleccionar Labor** ⏳
+- Sistema obtiene especie automáticamente
+- Sistema llama a `/api/pautas/labores-por-especie/{especie_id}` ⏳
+
+### **Paso 3: Formulario Dinámico** ⏳
+- Sistema genera formulario
+- Sistema llama a `/api/pautas/formulario-dinamico/{labor_id}/{especie_id}` ⏳
+
+---
+
+## 🚀 **PRÓXIMOS PASOS**
+
+Una vez que confirmes el estado del endpoint, podemos:
+
+1. **Si está implementado**: Verificar por qué falla la conexión
+2. **Si no está implementado**: Esperar a que lo implementes
+3. **Si tiene otro nombre**: Actualizar el frontend con el endpoint correcto
+
+---
+
+## 📞 **INFORMACIÓN DE CONTACTO**
+
+**Frontend**: Listo para continuar con el flujo completo
+**Backend**: Necesitamos confirmación sobre el endpoint `/api/pautas/cuartel-especie/{cuartel_id}`
+
+---
+
+**📅 Fecha**: 25 de Agosto 2025  
+**🔧 Versión**: 1.0.0  
+**📋 Estado**: ⏳ Esperando confirmación del backend
+
+---
+
+**¡Gracias por tu ayuda!** 🙏

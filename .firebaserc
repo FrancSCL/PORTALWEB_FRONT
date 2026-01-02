@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "gestion-la-hornilla",
+    "frontweb": "front-portalweb"
+  },
+  "targets": {},
+  "etags": {}
+}

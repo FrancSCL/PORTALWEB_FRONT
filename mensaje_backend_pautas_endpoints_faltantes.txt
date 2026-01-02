@@ -1,0 +1,377 @@
+# 🚨 **ENDPOINTS FALTANTES PARA SISTEMA DE PAUTAS**
+
+## 🔧 **PROBLEMA IDENTIFICADO**
+
+Hola equipo Backend,
+
+El frontend del **sistema de pautas** está fallando porque faltan varios endpoints esenciales. El error "Failed to fetch" indica que estos endpoints no existen en el servidor.
+
+## 📋 **ENDPOINTS FALTANTES**
+
+### **🏷️ ENDPOINTS BÁSICOS (4 endpoints):**
+1. **`GET /api/temporadas`** - Listar temporadas disponibles
+2. **`GET /api/cuarteles`** - Listar cuarteles del usuario
+3. **`GET /api/atributos`** - Listar atributos disponibles
+4. **`GET /api/especies`** - Listar especies disponibles
+
+### **📊 ENDPOINTS DE PAUTAS (8 endpoints):**
+5. **`GET /api/pautas/labor-especie`** - Listar combinaciones labor-especie
+6. **`GET /api/pautas/atributos-especie/{especie_id}`** - Atributos por especie
+7. **`GET /api/pautas/tipos-planta`** - Tipos de planta disponibles
+8. **`GET /api/pautas/tipos-planta-registro`** - Tipos de planta desde registro de mapeo
+9. **`GET /api/pautas/configuraciones`** - Listar configuraciones
+10. **`POST /api/pautas/configuraciones`** - Crear configuración
+11. **`PUT /api/pautas/configuraciones/{id}`** - Actualizar configuración
+12. **`DELETE /api/pautas/configuraciones/{id}`** - Eliminar configuración
+
+### **📝 ENDPOINTS DE GESTIÓN (6 endpoints):**
+13. **`GET /api/pautas/pautas`** - Listar pautas del usuario
+14. **`POST /api/pautas/pautas`** - Crear nueva pauta
+15. **`GET /api/pautas/pautas/{id}`** - Obtener pauta específica
+16. **`GET /api/pautas/formulario/{labor_id}/{especie_id}`** - Generar formulario
+17. **`POST /api/pautas/pautas/{id}/detalles`** - Crear detalle de pauta
+18. **`POST /api/pautas/pautas/{id}/detalles-masivo`** - Crear múltiples detalles
+
+---
+
+## 🎯 **ENDPOINTS PRIORITARIOS**
+
+### **🔥 CRÍTICOS (Para que funcione la pantalla):**
+1. **`GET /api/temporadas`** - Para seleccionar temporada
+2. **`GET /api/cuarteles`** - Para seleccionar cuartel
+3. **`GET /api/pautas/labor-especie`** - Para generar formulario
+4. **`GET /api/pautas/formulario/{labor_id}/{especie_id}`** - Para crear pauta
+
+### **⭐ IMPORTANTES (Para funcionalidad completa):**
+5. **`GET /api/atributos`** - Para configuración
+6. **`GET /api/pautas/configuraciones`** - Para gestión
+7. **`POST /api/pautas/pautas`** - Para crear pauta
+8. **`POST /api/pautas/pautas/{id}/detalles-masivo`** - Para guardar detalles
+
+---
+
+## 📊 **ESTRUCTURA DE RESPUESTAS ESPERADAS**
+
+### **1. Temporadas:**
+```json
+{
+  "success": true,
+  "message": "Temporadas obtenidas exitosamente",
+  "data": {
+    "temporadas": [
+      {
+        "id": 1,
+        "nombre": "Temporada 2024-2025",
+        "fecha_inicio": "2024-09-01",
+        "fecha_fin": "2025-08-31",
+        "activa": true
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+### **2. Cuarteles:**
+```json
+{
+  "success": true,
+  "message": "Cuarteles obtenidos exitosamente",
+  "data": {
+    "cuarteles": [
+      {
+        "id": 1,
+        "nombre": "Cuartel Norte",
+        "descripcion": "Cuartel principal",
+        "nombre_ceco": "CECO-001",
+        "nombre_sucursal": "SAN MANUEL"
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+### **3. Labor-Especie:**
+```json
+{
+  "success": true,
+  "message": "Labor-especie obtenidas exitosamente",
+  "data": {
+    "labor_especie": [
+      {
+        "id": 1,
+        "id_labor": 1,
+        "id_especie": 1,
+        "nombre_labor": "Conteo",
+        "nombre_especie": "CEREZA",
+        "estado": 1
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+### **4. Formulario Dinámico:**
+```json
+{
+  "success": true,
+  "message": "Formulario generado exitosamente",
+  "data": {
+    "labor_especie": {
+      "id": 1,
+      "id_labor": 1,
+      "id_especie": 1,
+      "nombre_labor": "Conteo",
+      "nombre_especie": "CEREZA"
+    },
+    "configuraciones": [
+      {
+        "id_atributo": 1,
+        "nombre_atributo": "Peso",
+        "id_tipoplanta": "TP001",
+        "nombre_tipo_planta": "Planta Principal"
+      }
+    ],
+    "tipos_planta": [
+      {
+        "id": "TP001",
+        "nombre": "Planta Principal",
+        "factor_productivo": 1.0,
+        "descripcion": "Planta principal de producción"
+      }
+    ],
+    "total_atributos": 1
+  }
+}
+```
+
+### **5. Crear Pauta:**
+```json
+{
+  "success": true,
+  "message": "Pauta creada exitosamente",
+  "data": {
+    "id": "PAU001",
+    "id_conteotipo": "1",
+    "id_usuario": "user123",
+    "id_temporada": 1,
+    "fecha": "2025-08-25",
+    "hora_registro": "10:30:00",
+    "id_cuartel": 1,
+    "nombre_temporada": "Temporada 2024-2025",
+    "nombre_cuartel": "Cuartel Norte",
+    "nombre_labor": "Conteo",
+    "nombre_especie": "CEREZA"
+  }
+}
+```
+
+### **6. Crear Detalles Masivos:**
+```json
+{
+  "success": true,
+  "message": "3 detalles creados exitosamente",
+  "data": {
+    "pauta": {
+      "id": "PAU001",
+      "nombre": "Pauta Conteo CEREZA"
+    },
+    "detalles_creados": [
+      {
+        "id": "DET001",
+        "id_pauta": "PAU001",
+        "id_atributo": 1,
+        "id_tipoplanta": "TP001",
+        "valor_atributo": 150.5,
+        "nombre_atributo": "Peso",
+        "nombre_tipo_planta": "Planta Principal"
+      }
+    ],
+    "total_creados": 3
+  }
+}
+```
+
+---
+
+## 🔧 **IMPLEMENTACIÓN SUGERIDA**
+
+### **Blueprint de Pautas:**
+```python
+# blueprints/pautas.py
+from flask import Blueprint, request, jsonify
+from models.pautas import *
+
+pautas_bp = Blueprint('pautas', __name__)
+
+@pautas_bp.route('/labor-especie', methods=['GET'])
+def get_labor_especie():
+    try:
+        # Obtener labor-especie activas
+        labor_especie = db.session.query(
+            LaborEspecie.id,
+            LaborEspecie.id_labor,
+            LaborEspecie.id_especie,
+            Labor.nombre.label('nombre_labor'),
+            Especie.nombre.label('nombre_especie'),
+            LaborEspecie.estado
+        ).join(Labor, LaborEspecie.id_labor == Labor.id)\
+         .join(Especie, LaborEspecie.id_especie == Especie.id)\
+         .filter(LaborEspecie.estado == 1)\
+         .all()
+        
+        return jsonify({
+            "success": True,
+            "message": "Labor-especie obtenidas exitosamente",
+            "data": {
+                "labor_especie": [{
+                    "id": item.id,
+                    "id_labor": item.id_labor,
+                    "id_especie": item.id_especie,
+                    "nombre_labor": item.nombre_labor,
+                    "nombre_especie": item.nombre_especie,
+                    "estado": item.estado
+                } for item in labor_especie],
+                "total": len(labor_especie)
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Error al obtener labor-especie: {str(e)}"
+        }), 500
+
+@pautas_bp.route('/formulario/<int:labor_id>/<int:especie_id>', methods=['GET'])
+def get_formulario(labor_id, especie_id):
+    try:
+        # Obtener configuración de pauta para labor-especie
+        configuraciones = db.session.query(
+            ConfiguracionPauta.id_atributo,
+            Atributo.nombre.label('nombre_atributo'),
+            ConfiguracionPauta.id_tipoplanta,
+            TipoPlanta.nombre.label('nombre_tipo_planta')
+        ).join(Atributo, ConfiguracionPauta.id_atributo == Atributo.id)\
+         .outerjoin(TipoPlanta, ConfiguracionPauta.id_tipoplanta == TipoPlanta.id)\
+         .join(LaborEspecie, ConfiguracionPauta.id_conteotipo == LaborEspecie.id)\
+         .filter(LaborEspecie.id_labor == labor_id)\
+         .filter(LaborEspecie.id_especie == especie_id)\
+         .all()
+        
+        # Obtener tipos de planta disponibles
+        tipos_planta = db.session.query(TipoPlanta).all()
+        
+        return jsonify({
+            "success": True,
+            "message": "Formulario generado exitosamente",
+            "data": {
+                "labor_especie": {
+                    "id": 1,
+                    "id_labor": labor_id,
+                    "id_especie": especie_id,
+                    "nombre_labor": "Conteo",
+                    "nombre_especie": "CEREZA"
+                },
+                "configuraciones": [{
+                    "id_atributo": config.id_atributo,
+                    "nombre_atributo": config.nombre_atributo,
+                    "id_tipoplanta": config.id_tipoplanta,
+                    "nombre_tipo_planta": config.nombre_tipo_planta
+                } for config in configuraciones],
+                "tipos_planta": [{
+                    "id": tipo.id,
+                    "nombre": tipo.nombre,
+                    "factor_productivo": tipo.factor_productivo,
+                    "descripcion": tipo.descripcion
+                } for tipo in tipos_planta],
+                "total_atributos": len(configuraciones)
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Error al generar formulario: {str(e)}"
+        }), 500
+
+# ... más endpoints
+```
+
+### **Registro en app.py:**
+```python
+# app.py
+from blueprints.pautas import pautas_bp
+
+app.register_blueprint(pautas_bp, url_prefix="/api/pautas")
+```
+
+---
+
+## 🚀 **PRIORIDAD DE IMPLEMENTACIÓN**
+
+### **Fase 1 (Crítica) - IMPLEMENTAR PRIMERO:**
+1. ✅ **`GET /api/temporadas`** - Listar temporadas
+2. ✅ **`GET /api/cuarteles`** - Listar cuarteles del usuario
+3. ✅ **`GET /api/pautas/labor-especie`** - Listar labor-especie
+4. ✅ **`GET /api/pautas/formulario/{labor_id}/{especie_id}`** - Generar formulario
+
+### **Fase 2 (Importante) - IMPLEMENTAR DESPUÉS:**
+5. ✅ **`POST /api/pautas/pautas`** - Crear pauta
+6. ✅ **`POST /api/pautas/pautas/{id}/detalles-masivo`** - Crear detalles
+7. ✅ **`GET /api/pautas/pautas`** - Listar pautas del usuario
+8. ✅ **`GET /api/pautas/pautas/{id}`** - Obtener pauta específica
+
+### **Fase 3 (Completa) - IMPLEMENTAR AL FINAL:**
+9. ✅ **`GET /api/pautas/configuraciones`** - Gestión de configuraciones
+10. ✅ **`POST /api/pautas/configuraciones`** - Crear configuración
+11. ✅ **`PUT /api/pautas/configuraciones/{id}`** - Actualizar configuración
+12. ✅ **`DELETE /api/pautas/configuraciones/{id}`** - Eliminar configuración
+
+---
+
+## 📝 **RESUMEN**
+
+- ❌ **18 endpoints faltantes** para sistema de pautas
+- 🔥 **4 endpoints críticos** para funcionalidad básica
+- 📊 **8 endpoints importantes** para funcionalidad completa
+- 🎯 **6 endpoints adicionales** para gestión avanzada
+
+**El frontend está listo y esperando estos endpoints para funcionar completamente.**
+
+**📅 Fecha**: 25 de Agosto 2025  
+**🔧 Versión**: 1.0.0  
+**📋 Estado**: ⚠️ ENDPOINTS FALTANTES - REQUIERE IMPLEMENTACIÓN BACKEND
+
+---
+
+## 🎯 **ACCIÓN INMEDIATA**
+
+**Implementar al menos los 4 endpoints críticos para que la pantalla de "Crear Pauta" funcione básicamente:**
+
+1. **`GET /api/temporadas`**
+2. **`GET /api/cuarteles`** 
+3. **`GET /api/pautas/labor-especie`**
+4. **`GET /api/pautas/formulario/{labor_id}/{especie_id}`**
+
+**Con estos 4 endpoints, el usuario podrá:**
+- ✅ Seleccionar temporada y cuartel
+- ✅ Seleccionar labor-especie
+- ✅ Generar formulario dinámico
+- ✅ Ver la interfaz funcionando
+
+**Los demás endpoints se pueden implementar gradualmente para funcionalidad completa.**
+
+---
+
+## 🔍 **ERROR ACTUAL**
+
+**Frontend muestra:**
+```
+Error del sistema
+Error al cargar los datos: ClientException: Failed to fetch, 
+uri=https://api-portalweb-927498545444.us-central1.run.app/api/temporadas
+```
+
+**Esto indica que el endpoint `/api/temporadas` no existe en el servidor.**
+
+**Una vez implementados los endpoints críticos, el sistema de pautas funcionará completamente.**

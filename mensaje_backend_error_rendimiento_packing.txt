@@ -1,0 +1,178 @@
+# 📋 **MENSAJE PARA EL BACKEND - ERROR EN RENDIMIENTO PACKING**
+
+## 🚨 **ERROR IDENTIFICADO**
+
+Hola equipo Backend,
+
+Al probar el formulario de **Rendimiento Packing** en el frontend, encontramos un error de base de datos.
+
+---
+
+## 🔍 **ERROR ESPECÍFICO**
+
+### **Error SQL:**
+```
+1054 (42S22): Unknown column 'fecha_creacion' in 'field list'
+```
+
+### **Endpoint afectado:**
+```
+POST /api/estimaciones/cuartel/{cuartel_id}/rendimiento-packing
+```
+
+### **Datos enviados:**
+```json
+{
+  "rendimiento": 89,
+  "fecha": "2025-10-04"
+}
+```
+
+### **Respuesta del backend:**
+```json
+{
+  "error": "1054 (42S22): Unknown column 'fecha_creacion' in 'field list'",
+  "message": "Error interno del servidor",
+  "success": false
+}
+```
+
+---
+
+## 🔧 **ANÁLISIS DEL PROBLEMA**
+
+### **Causa probable:**
+- La tabla de rendimiento packing **no tiene** la columna `fecha_creacion`
+- El backend está intentando insertar en una columna que no existe
+- Posible inconsistencia entre el código y la estructura de la base de datos
+
+### **Campos que el backend está intentando usar:**
+- `fecha_creacion` ❌ (No existe)
+- Posiblemente otros campos que no están definidos en la tabla
+
+---
+
+## 📊 **ESTRUCTURA DE TABLA SUGERIDA**
+
+### **Tabla: `rendimiento_packing`**
+```sql
+CREATE TABLE rendimiento_packing (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cuartel_id BIGINT NOT NULL REFERENCES general_dim_cuartel(id),
+    fecha DATE NOT NULL,
+    rendimiento DECIMAL(5,2) NOT NULL CHECK (rendimiento >= 0 AND rendimiento <= 100),
+    usuario_id UUID NOT NULL REFERENCES usuarios(id),
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- ✅ Campo correcto
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### **Campos que debería usar el backend:**
+- ✅ `id` - UUID generado automáticamente
+- ✅ `cuartel_id` - ID del cuartel (del contexto)
+- ✅ `fecha` - Fecha del rendimiento (del frontend)
+- ✅ `rendimiento` - Valor del rendimiento (del frontend)
+- ✅ `usuario_id` - ID del usuario (del token JWT)
+- ✅ `fecha_registro` - Timestamp de creación (automático)
+- ❌ `fecha_creacion` - **NO EXISTE** (causa del error)
+
+---
+
+## 🛠️ **SOLUCIONES PROPUESTAS**
+
+### **Opción 1: Corregir el código del backend**
+```python
+# Cambiar de:
+INSERT INTO rendimiento_packing (fecha_creacion, ...)
+
+# A:
+INSERT INTO rendimiento_packing (fecha_registro, ...)
+```
+
+### **Opción 2: Agregar la columna faltante**
+```sql
+ALTER TABLE rendimiento_packing 
+ADD COLUMN fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+```
+
+### **Opción 3: Verificar estructura actual**
+```sql
+DESCRIBE rendimiento_packing;
+-- o
+SELECT COLUMN_NAME, DATA_TYPE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'rendimiento_packing';
+```
+
+---
+
+## 🧪 **PRUEBAS SUGERIDAS**
+
+### **1. Verificar estructura de tabla:**
+```sql
+SHOW CREATE TABLE rendimiento_packing;
+```
+
+### **2. Verificar campos disponibles:**
+```sql
+SELECT * FROM rendimiento_packing LIMIT 1;
+```
+
+### **3. Probar inserción manual:**
+```sql
+INSERT INTO rendimiento_packing (cuartel_id, fecha, rendimiento, usuario_id)
+VALUES (1020200501, '2025-10-04', 89.0, 'usuario-uuid');
+```
+
+---
+
+## 📞 **ACCIÓN REQUERIDA**
+
+### **Para el Backend:**
+1. **Verificar** la estructura actual de la tabla `rendimiento_packing`
+2. **Corregir** el código para usar los campos correctos
+3. **Probar** el endpoint con datos reales
+4. **Confirmar** que la inserción funciona correctamente
+
+### **Campos esperados por el frontend:**
+- `rendimiento` (DECIMAL) - Valor del rendimiento
+- `fecha` (DATE) - Fecha del rendimiento
+- Campos automáticos: `id`, `cuartel_id`, `usuario_id`, `fecha_registro`
+
+---
+
+## 🔍 **DEBUGGING ADICIONAL**
+
+### **Si el problema persiste:**
+1. **Verificar** que la tabla existe
+2. **Confirmar** permisos de inserción
+3. **Revisar** logs del servidor para más detalles
+4. **Probar** con datos mínimos
+
+### **Información adicional necesaria:**
+- Estructura actual de la tabla
+- Código SQL que está fallando
+- Logs completos del error
+
+---
+
+## 📋 **ESTADO ACTUAL**
+
+### **Frontend:**
+- ✅ Formulario funcionando correctamente
+- ✅ Validaciones implementadas
+- ✅ Manejo de errores configurado
+- ❌ No puede guardar por error del backend
+
+### **Backend:**
+- ❌ Error de columna inexistente
+- ❌ Endpoint no funcional
+- ⏳ Pendiente de corrección
+
+---
+
+**📅 Fecha**: 25 de Enero 2025  
+**🔧 Prioridad**: Alta  
+**📋 Estado**: Error crítico - Pendiente de corrección backend
+
+**¡Necesitamos que corrijan el error de la columna `fecha_creacion` para que el formulario funcione!** 🚨

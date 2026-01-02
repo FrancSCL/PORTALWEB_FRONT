@@ -9,6 +9,7 @@ import 'package:excel/excel.dart' as excel_lib;
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/main_scaffold.dart';
+import '../config/api_config.dart';
 
 class MapeoScreen extends StatefulWidget {
   const MapeoScreen({super.key});
@@ -33,8 +34,12 @@ class _MapeoScreenState extends State<MapeoScreen> {
   String? _uploadedFileName;
   
   // Variables para tarjetas expandibles
-  bool _hilerasExpanded = true;
+  bool _hilerasExpanded = false;
   bool _plantasExpanded = false;
+  
+  // Variables para hileras de cuarteles
+  Map<int, List<Map<String, dynamic>>> _hilerasPorCuartel = {};
+  Map<int, bool> _isLoadingHileras = {};
 
   @override
   void initState() {
@@ -414,7 +419,7 @@ class _MapeoScreenState extends State<MapeoScreen> {
       
       // Llamada real a la API
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/cuarteles'),
+        Uri.parse('${ApiConfig.cuartelesUrl}'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -966,7 +971,7 @@ class _MapeoScreenState extends State<MapeoScreen> {
 
       // Enviar datos al backend
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/cuarteles/catastro-masivo'),
+        Uri.parse('${ApiConfig.cuartelesUrl}/catastro-masivo'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -1076,7 +1081,7 @@ class _MapeoScreenState extends State<MapeoScreen> {
       final cuartelesIds = cuartelesSeleccionados.map((c) => c['id'] as int).toList();
       
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/cuarteles/plantilla-plantas-masiva'),
+        Uri.parse('${ApiConfig.cuartelesUrl}/plantilla-plantas-masiva'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -1480,7 +1485,7 @@ class _MapeoScreenState extends State<MapeoScreen> {
 
       // Enviar datos al backend
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/cuarteles/plantas-masivo'),
+        Uri.parse('${ApiConfig.cuartelesUrl}/plantas-masivo'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -1895,24 +1900,44 @@ class _MapeoScreenState extends State<MapeoScreen> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: 'Estado Catastro',
-                          border: OutlineInputBorder(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        value: cuartel['estado'],
-                        items: [
-                          'activo',
-                          'inactivo',
-                          'pendiente',
-                          'en_progreso',
-                          'completado',
-                          'verificado'
-                        ].map((estado) => DropdownMenuItem(
-                          value: estado,
-                          child: Text(_getEstadoText(estado)),
-                        )).toList(),
-                        onChanged: (value) => _actualizarEstadoCatastro(cuartel['id'], value!),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Estado Catastro:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Switch(
+                              value: cuartel['estado'] == 'activo',
+                              onChanged: (value) => _actualizarEstadoCatastro(
+                                cuartel['id'], 
+                                value ? 'activo' : 'inactivo'
+                              ),
+                              activeColor: AppTheme.successColor,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              cuartel['estado'] == 'activo' ? 'Activo' : 'Inactivo',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: cuartel['estado'] == 'activo' 
+                                    ? AppTheme.successColor 
+                                    : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -1925,13 +1950,238 @@ class _MapeoScreenState extends State<MapeoScreen> {
     );
   }
 
+  // Función para cargar hileras de un cuartel específico
+  Future<void> _cargarHilerasCuartel(int cuartelId) async {
+    if (_isLoadingHileras[cuartelId] == true) return;
+    
+    setState(() {
+      _isLoadingHileras[cuartelId] = true;
+    });
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+      
+      final response = await http.get(
+        Uri.parse('${ApiConfig.cuartelesUrl}/$cuartelId/hileras'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        print('API Response para hileras del cuartel $cuartelId: $responseData');
+        
+        // Procesar la nueva estructura de respuesta del backend
+        List<Map<String, dynamic>> hileras = [];
+        
+        if (responseData['success'] == true && responseData['data'] != null) {
+          // Nueva estructura: { "success": true, "data": { "hileras": [...] } }
+          final data = responseData['data'];
+          if (data['hileras'] != null) {
+            hileras = List<Map<String, dynamic>>.from(data['hileras']);
+          }
+        } else if (responseData['data'] != null && responseData['data']['hileras'] != null) {
+          // Estructura alternativa: { "data": { "hileras": [...] } }
+          hileras = List<Map<String, dynamic>>.from(responseData['data']['hileras']);
+        } else if (responseData['hileras'] != null) {
+          // Estructura legacy: { "hileras": [...] }
+          hileras = List<Map<String, dynamic>>.from(responseData['hileras']);
+        }
+        
+        print('Hileras encontradas: ${hileras.length}');
+        print('Estructura de hileras: $hileras');
+        
+        setState(() {
+          _hilerasPorCuartel[cuartelId] = hileras;
+          _isLoadingHileras[cuartelId] = false;
+        });
+      } else {
+        print('Error API: ${response.statusCode} - ${response.body}');
+        throw Exception('Error al cargar hileras: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error cargando hileras para cuartel $cuartelId: $e');
+      setState(() {
+        _hilerasPorCuartel[cuartelId] = [];
+        _isLoadingHileras[cuartelId] = false;
+      });
+    }
+  }
+
+
+
+  // Función para agregar una hilera
+  Future<void> _agregarHilera(int cuartelId) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+      
+      final requestBody = {
+        'hilera': 'Hilera ${(_hilerasPorCuartel[cuartelId]?.length ?? 0) + 1}',
+      };
+      
+      final response = await http.post(
+        Uri.parse('${ApiConfig.cuartelesUrl}/$cuartelId/hileras'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        print('Respuesta agregar hilera: $responseData');
+        
+        // Recargar hileras después de agregar
+        await _cargarHilerasCuartel(cuartelId);
+        
+        // Actualizar el contador de hileras en el cuartel
+        final cuartelIndex = _cuarteles.indexWhere((c) => c['id'] == cuartelId);
+        if (cuartelIndex != -1) {
+          setState(() {
+            _cuarteles[cuartelIndex]['n_hileras'] = (_cuarteles[cuartelIndex]['n_hileras'] as int) + 1;
+          });
+        }
+        
+        // Mostrar mensaje del backend o mensaje por defecto
+        final message = responseData['message'] ?? 'Hilera agregada exitosamente';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      } else {
+        String errorMessage;
+        try {
+          final errorData = json.decode(response.body);
+          errorMessage = errorData['message'] ?? 'Error al agregar hilera: ${response.statusCode}';
+        } catch (e) {
+          errorMessage = 'Error al agregar hilera: ${response.statusCode}';
+        }
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('Error agregando hilera: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al agregar hilera: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
+  }
+
+  // Función para quitar la última hilera
+  Future<void> _quitarUltimaHilera(int cuartelId) async {
+    final hileras = _hilerasPorCuartel[cuartelId] ?? [];
+    if (hileras.isEmpty) return;
+
+    final ultimaHilera = hileras.last;
+    
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+      
+      final deleteUrl = '${ApiConfig.cuartelesUrl}/$cuartelId/hileras/${ultimaHilera['id']}';
+      
+      final response = await http.delete(
+        Uri.parse(deleteUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        print('Respuesta eliminar hilera: $responseData');
+        
+        // Recargar hileras después de eliminar
+        await _cargarHilerasCuartel(cuartelId);
+        
+        // Actualizar el contador de hileras en el cuartel
+        final cuartelIndex = _cuarteles.indexWhere((c) => c['id'] == cuartelId);
+        if (cuartelIndex != -1) {
+          setState(() {
+            _cuarteles[cuartelIndex]['n_hileras'] = (_cuarteles[cuartelIndex]['n_hileras'] as int) - 1;
+          });
+        }
+        
+        // Mostrar mensaje del backend o mensaje por defecto
+        final message = responseData['message'] ?? 'Hilera eliminada exitosamente';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      } else {
+        String errorMessage;
+        try {
+          final errorData = json.decode(response.body);
+          errorMessage = errorData['message'] ?? 'Error al eliminar hilera: ${response.statusCode}';
+        } catch (e) {
+          errorMessage = 'Error al eliminar hilera: ${response.statusCode}';
+        }
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('Error eliminando hilera: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al eliminar hilera: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
+  }
+
   Widget _buildHilerasList(int cuartelId) {
-    // TODO: Cargar hileras desde la API para el cuartel específico
-    final hileras = <Map<String, dynamic>>[];
+    // Cargar hileras si no están cargadas
+    if (!_hilerasPorCuartel.containsKey(cuartelId)) {
+      // Cargar hileras inmediatamente
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _cargarHilerasCuartel(cuartelId);
+      });
+    }
+    
+    final hileras = _hilerasPorCuartel[cuartelId] ?? [];
+    final isLoading = _isLoadingHileras[cuartelId] ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Mensaje informativo temporal
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.orange[200]!),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Funciones de agregar/eliminar hileras temporalmente deshabilitadas - Backend en mantenimiento',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -1939,17 +2189,67 @@ class _MapeoScreenState extends State<MapeoScreen> {
               'Hileras del Cuartel',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            Text(
-              '${hileras.length} hileras',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+                            Row(
+              children: [
+                Text(
+                  '${hileras.length} hileras',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Botón de debug temporal
+                ElevatedButton(
+                  onPressed: () {
+                    print('=== DEBUG HILERAS ===');
+                    print('Cuartel ID: $cuartelId');
+                    print('Hileras actuales: ${hileras.length}');
+                    print('Estructura de hileras: $hileras');
+                    if (hileras.isNotEmpty) {
+                      print('Última hilera: ${hileras.last}');
+                    }
+                  },
+                  child: const Text('Debug'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    textStyle: const TextStyle(fontSize: 10),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         const SizedBox(height: 8),
-        if (hileras.isEmpty)
+        if (isLoading)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Cargando hileras...',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (hileras.isEmpty)
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1969,55 +2269,88 @@ class _MapeoScreenState extends State<MapeoScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Agrega hileras usando el botón "Agregar Hileras"',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+
               ],
             ),
           )
         else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 5,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 2,
-            ),
-            itemCount: hileras.length,
-            itemBuilder: (context, index) {
-              final hilera = hileras[index];
-              return Card(
-                elevation: 1,
-                child: InkWell(
-                  onTap: () => _showEliminarHileraDialog(hilera['id'] as int, hilera['nombre'] as String),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          hilera['nombre'] as String,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          '${hilera['plantas']} plantas',
-                          style: const TextStyle(fontSize: 10, color: Colors.grey),
-                        ),
-                      ],
-                    ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: hileras.asMap().entries.map((entry) {
+              final index = entry.key;
+              final hilera = entry.value;
+              final isLast = index == hileras.length - 1;
+              
+              return Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${hilera['hilera'] ?? index + 1}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                          Text(
+                            'Hilera',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Botón de eliminar solo para la última hilera
+                    if (isLast)
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Función temporalmente deshabilitada - Backend en mantenimiento'),
+                                backgroundColor: Colors.orange,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          },
+                                                      child: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[400],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            child: const Icon(
+                              Icons.close,
+                              size: 12,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               );
-            },
+            }).toList(),
           ),
       ],
     );
@@ -2271,7 +2604,7 @@ class _MapeoScreenState extends State<MapeoScreen> {
 
                   // Llamada real a la API para agregar hileras
                   final response = await http.post(
-                    Uri.parse('http://localhost:5000/api/cuarteles/$cuartelId/hileras'),
+                    Uri.parse('${ApiConfig.cuartelesUrl}/$cuartelId/hileras'),
                     headers: {
                       'Authorization': 'Bearer $token',
                       'Content-Type': 'application/json',
@@ -2645,7 +2978,7 @@ class _MapeoScreenState extends State<MapeoScreen> {
         throw Exception('No hay token de autenticación disponible');
       }
       
-      final uri = Uri.parse('http://localhost:5000/api/mapeo/descargar-plantilla?tipo=$tipo');
+      final uri = Uri.parse('${ApiConfig.mapeoUrl}/descargar-plantilla?tipo=$tipo');
       final response = await http.get(
         uri,
         headers: {

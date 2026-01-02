@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:html' as html;
+import '../config/api_config.dart';
 
 class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
@@ -21,9 +23,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _loadAuthState() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      final userData = prefs.getString('user');
+      // Para web, usar localStorage directamente
+      final token = html.window.localStorage['token'];
+      final userData = html.window.localStorage['user'];
 
       if (token != null && userData != null) {
         _token = token;
@@ -41,8 +43,8 @@ class AuthProvider extends ChangeNotifier {
   Future<String?> getToken() async {
     if (_token != null) return _token;
     
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
+    // Para web, usar localStorage directamente
+    return html.window.localStorage['token'];
   }
 
   Future<bool> login(String username, String password) async {
@@ -59,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
       print('Enviando datos de login: $loginData');
       
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/auth/login'),
+        Uri.parse('${ApiConfig.authUrl}/login'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -85,10 +87,9 @@ class AuthProvider extends ChangeNotifier {
           };
           _isAuthenticated = true;
 
-          // Guardar en SharedPreferences
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', _token!);
-          await prefs.setString('user', jsonEncode(_user));
+          // Guardar en localStorage para web
+          html.window.localStorage['token'] = _token!;
+          html.window.localStorage['user'] = jsonEncode(_user);
 
           print('Login exitoso para usuario: ${_user?['usuario']} (${_user?['nombre']})');
           print('Sucursal: ${_user?['sucursal_nombre']}');
@@ -113,9 +114,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('token');
-      await prefs.remove('user');
+      // Limpiar localStorage para web
+      html.window.localStorage.remove('token');
+      html.window.localStorage.remove('user');
 
       _token = null;
       _user = null;
@@ -124,6 +125,28 @@ class AuthProvider extends ChangeNotifier {
       print('Error during logout: $e');
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<void> handleTokenExpiry(BuildContext context) async {
+    // Mostrar mensaje de sesión expirada
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sesión expirada. Redirigiendo al login...'),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 2),
+      ),
+    );
+    
+    // Cerrar sesión automáticamente
+    await logout();
+    
+    // Redirigir al login usando navegación web
+    if (context.mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/login',
+        (route) => false,
+      );
     }
   }
 
@@ -149,7 +172,7 @@ class AuthProvider extends ChangeNotifier {
 
       // Llamada real a la API para cambiar sucursal
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/auth/cambiar-sucursal'),
+        Uri.parse('${ApiConfig.authUrl}/cambiar-sucursal'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
@@ -169,9 +192,8 @@ class AuthProvider extends ChangeNotifier {
         _user!['sucursal_nombre'] = data['sucursal_nombre'];
         _user!['id_sucursal'] = data['id_sucursal'];
         
-        // Guardar en SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user', jsonEncode(_user));
+        // Guardar en localStorage para web
+        html.window.localStorage['user'] = jsonEncode(_user);
 
         // Notificar a los widgets que escuchan
         notifyListeners();
@@ -195,7 +217,7 @@ class AuthProvider extends ChangeNotifier {
       if (_token == null) return [];
 
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/sucursales/'),
+        Uri.parse('${ApiConfig.sucursalesUrl}/'),
         headers: {
           'Authorization': 'Bearer $_token',
         },

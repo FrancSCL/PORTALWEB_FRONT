@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'persistent_sidebar.dart';
 import 'sucursal_selector.dart';
+import '../services/navigation_service.dart';
 
 class MainScaffold extends StatelessWidget {
   final String title;
@@ -39,6 +40,7 @@ class MainScaffold extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        leading: NavigationHelper.buildBackButton(context),
         actions: [
           ...?actions,
           const SucursalSelector(),
@@ -47,9 +49,16 @@ class MainScaffold extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: PersistentSidebar(
-        currentRoute: currentRoute,
-        child: bodyWidget,
+      body: Column(
+        children: [
+          NavigationHelper.buildBreadcrumbs(context),
+          Expanded(
+            child: PersistentSidebar(
+              currentRoute: currentRoute,
+              child: bodyWidget,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: floatingActionButton,

@@ -1,0 +1,199 @@
+## 📋 **SOLICITUD DE ENDPOINTS PARA CREACIÓN DE DATOS**
+
+Hola equipo Backend,
+
+La vista detallada de cuarteles está funcionando perfectamente y mostrando los datos correctamente. Ahora necesitamos los endpoints para **crear/agregar** datos en las secciones que están vacías.
+
+---
+
+## 🎯 **ENDPOINTS NECESARIOS PARA CREACIÓN:**
+
+### **1. Crear Nueva Estimación**
+```http
+POST /api/estimaciones/cuartel/{cuartel_id}/estimaciones
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "tipo_estimacion": "PRESUPUESTO",
+  "estimacion_cajas_ha": 4000,
+  "estimacion": 0,
+  "fecha": "2025-01-15",
+  "observaciones": "Estimación inicial"
+}
+```
+
+### **2. Crear Nueva Pauta**
+```http
+POST /api/pautas/pautas
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "id_conteotipo": 1,
+  "id_temporada": 1,
+  "id_cuartel": 1020205601,
+  "observaciones": "Pauta de raleo"
+}
+```
+
+### **3. Agregar Rendimiento Packing**
+```http
+POST /api/estimaciones/cuartel/{cuartel_id}/rendimiento-packing
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "rendimiento": 87.50,
+  "fecha": "2025-01-15",
+  "observaciones": "Rendimiento excelente"
+}
+```
+
+### **4. Agregar Frutos/Ramilla Histórico**
+```http
+POST /api/estimaciones/cuartel/{cuartel_id}/frutos-ramilla-historico
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "frutos_ramilla": 3.50,
+  "fecha": "2025-01-15",
+  "observaciones": "Relación frutos/ramilla normal"
+}
+```
+
+### **5. Agregar Calibre Histórico**
+```http
+POST /api/estimaciones/cuartel/{cuartel_id}/calibres-historicos
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "calibre": "80-85",
+  "cantidad": 150,
+  "fecha": "2025-01-15",
+  "observaciones": "Calibre premium"
+}
+```
+
+### **6. Crear Nuevo Mapeo**
+```http
+POST /api/estimaciones/cuartel/{cuartel_id}/mapeos
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "fecha_inicio": "2025-01-15",
+  "observaciones": "Mapeo de plantas productivas"
+}
+```
+
+---
+
+## 🔧 **FUNCIONALIDADES REQUERIDAS:**
+
+### **✅ Validaciones:**
+- Campos requeridos validados
+- Fechas en formato correcto
+- Valores numéricos válidos
+- Permisos de usuario verificados
+
+### **✅ Respuestas Esperadas:**
+```json
+{
+  "success": true,
+  "message": "Datos creados exitosamente",
+  "data": {
+    "id": "nuevo_id_generado",
+    "fecha_creacion": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+### **✅ Manejo de Errores:**
+```json
+{
+  "success": false,
+  "message": "Error al crear datos",
+  "error": "Descripción del error específico"
+}
+```
+
+---
+
+## 📱 **IMPLEMENTACIÓN EN FRONTEND:**
+
+### **Botones de Acción:**
+- **"NUEVA ESTIMACIÓN"** → Abre formulario de estimación
+- **"NUEVA PAUTA"** → Abre formulario de pauta
+- **"AÑADIR"** (Rendimiento) → Abre formulario de rendimiento
+- **"AÑADIR"** (Frutos/Ramilla) → Abre formulario de frutos/ramilla
+- **"NUEVO MAPEO"** → Abre formulario de mapeo
+- **Sin botón** (Calibres) → Agregar botón "AÑADIR CALIBRE"
+
+### **Formularios Sugeridos:**
+- **Estimación**: Tipo, Cajas/Ha, Estimación, Fecha, Observaciones
+- **Pauta**: Labor, Especie, Fecha inicio, Observaciones
+- **Rendimiento**: Porcentaje, Fecha, Observaciones
+- **Frutos/Ramilla**: Relación, Fecha, Observaciones
+- **Calibre**: Rango, Cantidad, Fecha, Observaciones
+- **Mapeo**: Fecha inicio, Observaciones
+
+---
+
+## 🎯 **CASOS DE USO:**
+
+### **✅ Flujo de Creación:**
+1. Usuario hace click en botón "AÑADIR/NUEVO"
+2. Se abre formulario modal o pantalla
+3. Usuario completa campos requeridos
+4. Se envía POST al endpoint correspondiente
+5. Se actualiza la vista con nuevos datos
+6. Se muestra mensaje de éxito
+
+### **✅ Validaciones Frontend:**
+- Campos requeridos marcados con *
+- Validación de fechas (no futuras)
+- Validación de números (positivos)
+- Confirmación antes de enviar
+
+---
+
+## 📝 **PREGUNTAS ESPECÍFICAS:**
+
+1. **¿Existen estos endpoints de creación?**
+2. **¿Cuáles son los campos requeridos para cada uno?**
+3. **¿Hay validaciones específicas en el backend?**
+4. **¿Los endpoints devuelven el ID del registro creado?**
+5. **¿Hay permisos especiales para crear datos?**
+
+---
+
+## 🚀 **PRIORIDAD:**
+
+### **Alta Prioridad:**
+- Crear Estimación
+- Crear Pauta
+- Agregar Rendimiento Packing
+
+### **Media Prioridad:**
+- Agregar Frutos/Ramilla Histórico
+- Agregar Calibre Histórico
+
+### **Baja Prioridad:**
+- Crear Nuevo Mapeo (ya existe uno)
+
+---
+
+**¿Pueden confirmar qué endpoints de creación están disponibles y cuáles necesitamos implementar?**
+
+¡Gracias!
+
+---
+
+**📅 Fecha**: 25 de Agosto 2025  
+**🔧 Versión**: 1.0.8  
+**📋 Estado**: ✅ SOLICITUD DE ENDPOINTS DE CREACIÓN  
+
+**¡Necesitamos endpoints para crear datos en las secciones vacías!** 🚀

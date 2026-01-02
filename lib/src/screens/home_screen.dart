@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/app_theme.dart';
+import '../services/navigation_service.dart';
 import 'login_screen.dart';
 import 'cambiar_clave_screen.dart';
 import 'cambiar_sucursal_screen.dart';
@@ -30,11 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _navigateTo(BuildContext context, Widget screen) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => screen),
-    );
+  void _navigateTo(BuildContext context, Widget screen, String routeName, String title) {
+    NavigationHelper.navigateToScreen(context, screen, routeName, title, parentRoute: '/');
   }
 
   Future<void> _confirmarCerrarSesion(BuildContext context, AuthProvider authProvider) async {
@@ -685,16 +683,10 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
       case 'Actividades':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ActividadesScreen()),
-        );
+        _navigateTo(context, const ActividadesScreen(), '/actividades', 'Actividades');
         break;
       case 'Parámetros':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ParametrosScreen()),
-        );
+        _navigateTo(context, const ParametrosScreen(), '/parametros', 'Parámetros');
         break;
       default:
         showDialog(
