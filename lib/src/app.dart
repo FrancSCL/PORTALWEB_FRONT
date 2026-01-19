@@ -12,14 +12,19 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        print('🔄 App widget rebuild - isLoading: ${authProvider.isLoading}, isAuthenticated: ${authProvider.isAuthenticated}');
+        
         if (authProvider.isLoading) {
+          print('📱 Mostrando SplashScreen');
           return const SplashScreen();
         }
         
         if (authProvider.isAuthenticated) {
+          print('📱 Mostrando HomeScreen');
           return const HomeScreen();
         }
         
+        print('📱 Mostrando LoginScreen');
         return const LoginScreen();
       },
     );

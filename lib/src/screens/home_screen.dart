@@ -4,13 +4,8 @@ import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/app_theme.dart';
 import '../services/navigation_service.dart';
+import '../config/app_routes.dart';
 import 'login_screen.dart';
-import 'cambiar_clave_screen.dart';
-import 'cambiar_sucursal_screen.dart';
-import 'actividades_screen.dart';
-import 'parametros_screen.dart';
-import 'produccion_screen.dart';
-import 'riego_screen.dart';
 import '../widgets/sucursal_selector.dart';
 import '../widgets/main_scaffold.dart';
 
@@ -31,8 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _navigateTo(BuildContext context, Widget screen, String routeName, String title) {
-    NavigationHelper.navigateToScreen(context, screen, routeName, title, parentRoute: '/');
+  void _navigateTo(BuildContext context, String routeName) {
+    NavigationHelper.navigateTo(context, routeName);
   }
 
   Future<void> _confirmarCerrarSesion(BuildContext context, AuthProvider authProvider) async {
@@ -88,9 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (result == true && context.mounted) {
       await authProvider.logout();
       if (context.mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        NavigationHelper.navigateToAndRemoveUntil(context, AppRoutes.login);
       }
     }
   }
@@ -590,16 +583,10 @@ class _HomeScreenState extends State<HomeScreen> {
     // Navegar directamente a las pantallas correspondientes
     switch (module) {
       case 'Producción':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProduccionScreen()),
-        );
+        _navigateTo(context, AppRoutes.produccion);
         break;
       case 'Riegos':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const RiegoScreen()),
-        );
+        _navigateTo(context, AppRoutes.riego);
         break;
       case 'Cecos':
         showDialog(
@@ -683,10 +670,10 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
       case 'Actividades':
-        _navigateTo(context, const ActividadesScreen(), '/actividades', 'Actividades');
+        _navigateTo(context, AppRoutes.actividades);
         break;
       case 'Parámetros':
-        _navigateTo(context, const ParametrosScreen(), '/parametros', 'Parámetros');
+        _navigateTo(context, AppRoutes.parametros);
         break;
       default:
         showDialog(
@@ -724,7 +711,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return MainScaffold(
       title: 'Plataforma Agrícola',
-      currentRoute: '/',
+      currentRoute: AppRoutes.home,
       onRefresh: () async {
         await authProvider.checkAuthStatus();
       },

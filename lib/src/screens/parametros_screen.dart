@@ -4,18 +4,7 @@ import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/main_scaffold.dart';
 import '../services/navigation_service.dart';
-import 'mapeo_screen.dart';
-import 'admin_usuarios_screen.dart';
-import 'conteo_atributo_optimo_screen.dart';
-import 'conteo_atributo_especie_screen.dart';
-import 'estimaciones_screen.dart';
-import 'pautas_configuracion_screen.dart';
-import 'pautas_formulario_screen.dart';
-import 'pautas_gestion_screen.dart';
-import 'manejo_parametros_conteo_screen.dart';
-import 'muestras_screen.dart';
-import 'pautas_formulario_dinamico_screen.dart';
-import 'configuracion_asociaciones_screen.dart';
+import '../config/app_routes.dart';
 
 class ParametrosScreen extends StatefulWidget {
   const ParametrosScreen({super.key});
@@ -87,21 +76,9 @@ class _ParametrosScreenState extends State<ParametrosScreen> {
   Widget _buildCategoryCard(Map<String, dynamic> category) {
     return CategoryCard(category: category, onTap: () {
       if (category['name'] == 'Mapeo') {
-        NavigationHelper.navigateToScreen(
-          context, 
-          const MapeoScreen(), 
-          '/mapeo', 
-          'Mapeo',
-          parentRoute: '/parametros',
-        );
+        NavigationHelper.navigateTo(context, AppRoutes.mapeo);
       } else if (category['name'] == 'Usuarios') {
-        NavigationHelper.navigateToScreen(
-          context, 
-          const AdminUsuariosScreen(), 
-          '/usuarios', 
-          'Usuarios',
-          parentRoute: '/parametros',
-        );
+        NavigationHelper.navigateTo(context, AppRoutes.adminUsuarios);
       } else {
         _showCategoryDetails(category);
       }
@@ -427,45 +404,39 @@ class _ParametrosScreenState extends State<ParametrosScreen> {
     // Si es la subcategoría de Mapeo, navegar directamente a la pantalla de mapeo
     if (subcategory['name'] == 'Configuración de Mapas' || subcategory['name'] == 'Capas de Información') {
       Navigator.pop(context);
-      NavigationHelper.navigateWithHistory(context, const MapeoScreen(), 'mapeo', 'Mapeo');
+      NavigationHelper.navigateTo(context, AppRoutes.mapeo);
       return;
     }
 
     // Para las nuevas subcategorías de Conteo
     if (subcategory['name'] == 'Pauta') {
       Navigator.pop(context);
-      NavigationHelper.navigateWithHistory(context, const PautasGestionScreen(), 'pautas-gestion', 'Gestión de Pautas');
+      NavigationHelper.navigateTo(context, AppRoutes.pautasGestion);
       return;
     }
 
     if (subcategory['name'] == 'Manejo de parámetros de conteo') {
       Navigator.pop(context);
-      NavigationHelper.navigateWithHistory(context, const ManejoParametrosConteoScreen(), 'manejo-parametros', 'Manejo de Parámetros');
+      NavigationHelper.navigateTo(context, AppRoutes.manejoParametrosConteo);
       return;
     }
 
     if (subcategory['name'] == 'Configuración conteo-pauta') {
       Navigator.pop(context);
-      NavigationHelper.navigateWithHistory(context, const PautasConfiguracionScreen(), 'configuracion-pautas', 'Configuración de Pautas');
+      NavigationHelper.navigateTo(context, AppRoutes.pautasConfiguracion);
       return;
     }
 
     if (subcategory['name'] == 'Asociaciones Labor-Especie') {
       Navigator.pop(context);
-      NavigationHelper.navigateWithHistory(context, const ConfiguracionAsociacionesScreen(), 'asociaciones', 'Configuración de Asociaciones');
+      NavigationHelper.navigateTo(context, AppRoutes.configuracionAsociaciones);
       return;
     }
 
     // Para las nuevas subcategorías de Estimaciones
     if (subcategory['name'] == 'Estimaciones. Rendimientos Packing') {
       Navigator.pop(context);
-      NavigationHelper.navigateToScreen(
-        context,
-        const EstimacionesScreen(),
-        '/estimaciones',
-        'Estimaciones',
-        parentRoute: '/parametros',
-      );
+      NavigationHelper.navigateTo(context, AppRoutes.estimaciones);
       return;
     }
 

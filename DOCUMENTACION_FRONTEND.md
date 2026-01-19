@@ -647,3 +647,4 @@ Para más información o soporte técnico, contactar al equipo de desarrollo.
 **Última actualización**: Diciembre 2024  
 **Desarrollado con**: Flutter 3.0+, Dart 3.2.3+
 
+

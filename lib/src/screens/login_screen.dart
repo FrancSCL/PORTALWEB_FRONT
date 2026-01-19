@@ -35,10 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      print('🔐 Iniciando proceso de login...');
       final success = await authProvider.login(
         _usernameController.text,
         _passwordController.text,
       );
+
+      print('🔐 Resultado del login: $success');
+      print('🔐 Estado después del login - isLoading: ${authProvider.isLoading}, isAuthenticated: ${authProvider.isAuthenticated}');
 
       if (!success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -47,6 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: AppTheme.errorColor,
           ),
         );
+      } else if (success) {
+        print('✅ Login exitoso, esperando redirección automática...');
       }
     } catch (e) {
       if (mounted) {

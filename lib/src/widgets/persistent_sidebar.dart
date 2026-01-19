@@ -3,10 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/sidebar_provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
-import '../screens/parametros_screen.dart';
-import '../screens/cambiar_clave_screen.dart';
-import '../screens/cambiar_sucursal_screen.dart';
-import '../screens/looker_test_screen.dart';
+import '../config/app_routes.dart';
 import '../services/navigation_service.dart';
 
 class PersistentSidebar extends StatelessWidget {
@@ -67,7 +64,7 @@ class PersistentSidebar extends StatelessWidget {
           // Logo redondo clickeable
           InkWell(
             onTap: () {
-              Navigator.pushReplacementNamed(context, '/');
+              NavigationHelper.navigateToReplacement(context, AppRoutes.home);
             },
             borderRadius: BorderRadius.circular(20),
             child: Container(
@@ -137,32 +134,32 @@ class PersistentSidebar extends StatelessWidget {
       {
         'icon': Icons.home,
         'title': 'Inicio',
-        'route': '/',
-        'isActive': currentRoute == '/',
+        'route': AppRoutes.home,
+        'isActive': currentRoute == AppRoutes.home,
       },
       {
         'icon': Icons.settings,
         'title': 'Configuración',
-        'route': '/parametros',
-        'isActive': currentRoute == '/parametros',
+        'route': AppRoutes.parametros,
+        'isActive': currentRoute == AppRoutes.parametros,
       },
       {
         'icon': Icons.analytics,
         'title': 'Looker Test',
-        'route': '/looker-test',
-        'isActive': currentRoute == '/looker-test',
+        'route': AppRoutes.lookerTest,
+        'isActive': currentRoute == AppRoutes.lookerTest,
       },
       {
         'icon': Icons.lock,
         'title': 'Cambiar Clave',
-        'route': '/cambiar-clave',
-        'isActive': currentRoute == '/cambiar-clave',
+        'route': AppRoutes.cambiarClave,
+        'isActive': currentRoute == AppRoutes.cambiarClave,
       },
       {
         'icon': Icons.business,
         'title': 'Sucursal',
-        'route': '/cambiar-sucursal',
-        'isActive': currentRoute == '/cambiar-sucursal',
+        'route': AppRoutes.cambiarSucursal,
+        'isActive': currentRoute == AppRoutes.cambiarSucursal,
       },
       {
         'icon': Icons.logout,
@@ -233,47 +230,12 @@ class PersistentSidebar extends StatelessWidget {
 
   void _handleMenuTap(BuildContext context, Map<String, dynamic> item) {
     final route = item['route'] as String;
-    final title = item['title'] as String;
     
-    switch (route) {
-      case '/':
-        Navigator.pushReplacementNamed(context, '/');
-        break;
-      case '/parametros':
-        NavigationHelper.navigateToScreen(
-          context,
-          const ParametrosScreen(),
-          '/parametros',
-          'Configuración General',
-        );
-        break;
-      case '/looker-test':
-        NavigationHelper.navigateToScreen(
-          context,
-          const LookerTestScreen(),
-          '/looker-test',
-          'Looker Test',
-        );
-        break;
-      case '/cambiar-clave':
-        NavigationHelper.navigateToScreen(
-          context,
-          const CambiarClaveScreen(),
-          '/cambiar-clave',
-          'Cambiar Clave',
-        );
-        break;
-      case '/cambiar-sucursal':
-        NavigationHelper.navigateToScreen(
-          context,
-          const CambiarSucursalScreen(),
-          '/cambiar-sucursal',
-          'Cambiar Sucursal',
-        );
-        break;
-      case '/logout':
-        _handleLogout(context);
-        break;
+    if (route == '/logout') {
+      _handleLogout(context);
+    } else {
+      // Usar rutas nombradas
+      NavigationHelper.navigateTo(context, route);
     }
   }
 
@@ -293,7 +255,7 @@ class PersistentSidebar extends StatelessWidget {
               Navigator.pop(context);
               final authProvider = Provider.of<AuthProvider>(context, listen: false);
               authProvider.logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              NavigationHelper.navigateToAndRemoveUntil(context, AppRoutes.login);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,

@@ -5,6 +5,8 @@ import 'src/providers/auth_provider.dart';
 import 'src/providers/theme_provider.dart';
 import 'src/providers/sidebar_provider.dart';
 import 'src/app.dart';
+import 'src/config/app_routes.dart';
+import 'src/services/navigation_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +30,12 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'Portal Web Agrícola',
             theme: themeProvider.currentTheme,
+            navigatorKey: NavigationService().navigatorKey,
             home: const App(),
+            onGenerateRoute: AppRoutes.generateRoute,
             debugShowCheckedModeBanner: false,
+            // Configuración de transiciones más suaves
+            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           );
         },
       ),

@@ -7,6 +7,7 @@ import '../config/api_config.dart';
 import '../theme/app_theme.dart';
 import '../widgets/main_scaffold.dart';
 import '../services/navigation_service.dart';
+import '../config/app_routes.dart';
 import 'pautas_formulario_dinamico_screen.dart';
 import 'pautas_crear_nueva_screen.dart';
 
@@ -164,11 +165,9 @@ class _PautasGestionScreenState extends State<PautasGestionScreen> {
   }
 
   void _nuevaPauta() {
-    NavigationHelper.navigateWithHistory(
+    NavigationHelper.navigateTo(
       context, 
-      const PautasCrearNuevaScreen(), 
-      'pautas-crear-nueva',
-      'Crear Nueva Pauta'
+      AppRoutes.pautasCrear,
     ).then((_) {
       // Recargar pautas cuando regrese de crear una nueva
       _cargarPautas();
